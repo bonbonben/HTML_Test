@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+    <head>
+		<script src="phaser.min.js">
+		</script>
+            <style>
+                body{margin:0}
+            </style>
+            <script type="text/javascript">
+            	window.onload = function() 
+				{
+                	var boxSize = 100;
+                	var game = new Phaser.Game(boxSize*4,boxSize*4,Phaser.CANVAS,"",{preload:toPreload, create:toCreate});
+                	var field = new Array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+                	var boxSprites;
+                	var upKey;
+                	var downKey;
+                	var leftKey;
+                	var rightKey;
+                	var colors = 
+					{
+                   		2:0xFFFFFF,
+                   		4:0xFFFFCC,
+                   		8:0xFFCC66,
+                   		16:0xFFCC00,
+                   		32:0xFF9900,
+                   		64:0xFF6600,
+                   		128:0xFF0000,
+                   		256:0xCCFFCC,
+                   		512:0xCCFF00,
+                   		1024:0x00FF00,
+                   		2048:0x00CC00,
+                   		4096:0x009900,
+                   		8192:0x99FFFF,
+                    	16384:0x99CCFF,
+                    	32768:0x00CCFF,
+                    	65536:0x0099FF,
+						131072:0x0066FF,
+					}
+                    var canMove=false;
+                    
+                	function toPreload() 
+					{
+                    	game.load.image("box", "box.png");
+               		}
+                
+                	function toCreate() 
+					{
+                   		upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+                   		upKey.onDown.add(moveUp,this);
+                       	downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+                       	downKey.onDown.add(moveDown,this);
+                       	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+                       	leftKey.onDown.add(moveLeft,this);
+                       	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+                       	rightKey.onDown.add(moveRight,this);
+                   		boxSprites = game.add.group();
+                    	addTwo();
+                    	addTwo();
+                	}
+                
+                	function addTwo()
+					{
+                    	do
+						{
+                        	var randomValue = Math.floor(Math.random()*16);
+                    	} while (field[randomValue]!=0)
+                    	field[randomValue]=2;
+                    	var box = game.add.sprite(toCol(randomValue)*boxSize,toRow(randomValue)*boxSize,"box");
+                    	box.pos = randomValue;
+                    	box.alpha=0;
+                    	var text = game.add.text(boxSize/2,boxSize/2,"2",{font:"bold 20px Arial",align:"center"});
+                    	text.anchor.set(0.5);
+                    	box.addChild(text);
+                    	boxSprites.add(box);
+                    	var fadeIn = game.add.tween(box);
+                    	fadeIn.to({alpha:1},250);
+                    	fadeIn.onComplete.add(function()
+							{
+                        		updateNumbers();
+                        		canMove=true;
+                    		})                   
+                    	fadeIn.start();
+                	}
+                
+                	function toRow(n)
+					{
+                    	return Math.floor(n/4);
+                	}
+                
+                	function toCol(n)
+					{
+                    	return n%4;    
+                	}
+                
+                	function updateNumbers()
+					{
+                    	boxSprites.forEach(function(item)
+						{                       
+                        	var value = field[item.pos];                       
+                        	item.getChildAt(0).text=value;                      
+                        	item.tint=colors[value]
+                    	});    
+                	}
+                
+                	function moveLeft()
+					{
+                        if(canMove)
+						{                        
+							canMove=false;                            
+							var moved = false;                              
+                         	boxSprites.sort("x",Phaser.Group.SORT_ASCENDING);                       
+                         	boxSprites.forEach(function(item)
+							{                            
+                             	var row = toRow(item.pos);
+                             	var col = toCol(item.pos);                             
+                             	if(col>0)
+								{                             
+                                 	var remove = false;                                
+                                 	for(i=col-1;i>=0;i--)
+									{                                    
+                                     	if(field[row*4+i]!=0)
+										{                                       
+                                         	if(field[row*4+i]==field[row*4+col])
+											{                                           
+                                             	remove = true;
+                                             	i--;                                             
+                                         	}
+                                         	break;
+                                     	}
+                                 	}                                 
+                                 	if(col!=i+1)
+									{                                   
+                                        moved=true;                                           
+                                        moveBox(item,row*4+col,row*4+i+1,remove);
+                                 	}
+                             	}
+                         	});
+                         	endMove(moved);
+                        }
+                	}
+                              
+                	function endMove(m)
+					{                  
+						if(m)
+						{                      
+                         	addTwo();
+                        }
+                        else
+						{                           
+                        	canMove=true;
+                    	}
+                	}
+                
+                	function moveBox(box,from,to,remove)
+					{                    
+                        field[to]=field[from];
+                        field[from]=0;
+                        box.pos=to;                        
+                        var movement = game.add.tween(box);
+                        movement.to({x:boxSize*(toCol(to)),y:boxSize*(toRow(to))},150);
+                        if(remove)
+						{                            
+                            field[to]*=2;                             
+                            movement.onComplete.add(function()
+							{
+                                box.destroy();
+                            });
+                        }                        
+                        movement.start();
+                    }
+                    
+                    function moveUp()
+					{
+                        if(canMove)
+						{
+                            canMove=false;
+                            var moved=false;
+                         	boxSprites.sort("y",Phaser.Group.SORT_ASCENDING);
+                         	boxSprites.forEach(function(item)
+							{
+                             	var row = toRow(item.pos);
+                             	var col = toCol(item.pos);
+                             	if(row>0)
+								{
+									var remove=false;
+                                 	for(i=row-1;i>=0;i--)
+									{
+                                     	if(field[i*4+col]!=0)
+										{
+                                         	if(field[i*4+col]==field[row*4+col])
+											{
+                                             	remove = true;
+                                             	i--;                                             
+                                         	}
+                                            break;
+                                     	}
+                                 	}
+                                 	if(row!=i+1)
+									{
+                                        moved=true;
+                                        moveBox(item,row*4+col,(i+1)*4+col,remove);
+                                 	}	
+                             	}
+                         	});
+                         	endMove(moved);
+                        }
+                	}
+                
+                    function moveRight()
+					{
+                        if(canMove)
+						{
+                            canMove=false;
+                            var moved=false;
+                         	boxSprites.sort("x",Phaser.Group.SORT_DESCENDING);
+                         	boxSprites.forEach(function(item)
+							{
+                             	var row = toRow(item.pos);
+                             	var col = toCol(item.pos);
+                             	if(col<3)
+								{
+                                    var remove = false;
+                                 	for(i=col+1;i<=3;i++)
+									{
+                                     	if(field[row*4+i]!=0)
+										{
+                                            if(field[row*4+i]==field[row*4+col])
+											{
+                                             	remove = true;
+                                             	i++;                                             
+                                         	}
+                                         	break;
+                                     	}
+                                 	}
+                                 	if(col!=i-1)
+									{
+                                        moved=true;
+                                     	moveBox(item,row*4+col,row*4+i-1,remove);
+                                 	}
+                             	}
+                         	});
+                         	endMove(moved);
+                        }
+                	}
+                    
+                    function moveDown()
+					{
+                        if(canMove)
+						{
+                            canMove=false;
+                            var moved=false;
+                         	boxSprites.sort("y",Phaser.Group.SORT_DESCENDING);
+                         	boxSprites.forEach(function(item)
+							{
+                             	var row = toRow(item.pos);
+                             	var col = toCol(item.pos);
+                             	if(row<3)
+								{
+                                    var remove = false;
+                                 	for(i=row+1;i<=3;i++)
+									{
+                                     	if(field[i*4+col]!=0)
+										{
+                                         	if(field[i*4+col]==field[row*4+col])
+											{
+                                             	remove = true;
+                                             	i++;                                             
+                                         	}
+                                            break;
+                                     	}
+                                 	}
+                                 	if(row!=i-1)
+									{
+                                        moved=true;
+                                     	moveBox(item,row*4+col,(i-1)*4+col,remove);
+                                 	}
+                             	}
+                         	});
+                          	endMove(moved);
+                        }
+                	}
+                };
+			</script>
+    </head>
+    <body>
+    </body>
+</html>
