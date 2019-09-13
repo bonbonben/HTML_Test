@@ -1,0 +1,69 @@
+﻿
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>bingo</title>
+
+<script language="javascript">
+
+var num=prompt("請輸入想要的bingo份數","");
+
+var line=prompt("請輸入想要的大小","");
+ 
+var visit=Array(99999);
+
+var names=Array(99999);
+
+function prin()
+{
+
+	for(var g=1;g<=99999;g++)
+	{
+		names[g]=g;
+	}	
+
+	document.open(); 
+
+	for(var i=1;i<=num;i++)
+	{
+		document.write("<table border=2 width=150 height=150>");
+						<!--width和height可以自己調~或是不寫的話他就會自動調整，但是這樣就不會統一表格大小了-->		
+		for(var j=1;j<=(line*line);j++)
+		{
+			var x=Math.random()*(line*line);<!--Math.random()創造出一個0~1的隨機有裡數-->
+			x=Math.round(x);<!--x最後是從0~100，因為Math.round(x)將小數點四捨五入了-->
+			
+			if(x>(line*line) || x<=0)<!--因為陣列是從0~99-->
+			{
+				j--;
+				continue;
+			}
+			if(visit[x])<!--避免重複的名子出現，之前出現過的就不要，再找一次random-->
+			{
+				j--;
+				<!--document.write("bfsdfgbdsfgbdsfgsd     "+x+"<br>");   這是測試，在表格多的時候會重複-->
+				continue;
+			}
+			visit[x]=true;
+			if((j-1)%line==0)
+			document.write("<tr>");			
+			document.write("<td>"+names[x]+"</td>");
+			if(j%line==0)
+			document.write("</tr>");
+		}	
+		document.write("</table>&nbsp;");
+		
+		for(var p=0;p<=(line*line);p++)
+			visit[p]=false;	
+	}
+	document.close(); 
+}
+prin();
+
+</script>
+</head>
+
+<body>
+</body>
+</html>

@@ -1,0 +1,179 @@
+﻿<html>
+<head>
+<title>時鐘動畫</title>  
+</head>
+<body>
+	<h1>Canvas Demo</h1>
+	<canvas width="250" height="250"  id="canvas"></canvas>
+    	<script type="text/javascript">
+        function clock(canvasID) 
+	{ 
+  		var canvas = document.getElementById(canvasID);
+  		this.context = canvas.getContext("2d");
+		this.W = canvas.offsetWidth;
+  		this.H = canvas.offsetHeight;
+  		this.R = this.W / 2;
+  		this.B = 12;         
+        }
+        //初始化
+        clock.prototype.cxtInit = function () 
+	{
+  		var cxt = this.context;
+  		cxt.save(); //保存畫布原始狀態
+  		cxt.clearRect(0, 0, this.W, this.H);    //清空畫布
+  		cxt.lineWidth = 3;	          //筆刷寬度為3
+  		cxt.strokeStyle = "Black";	  //筆刷顏色為黑色
+  		cxt.translate(this.R, this.R);          //定位中心點
+  		cxt.rotate(-Math.PI / 2);	   //旋轉負90度
+  		cxt.save(); //保存初始化後的狀態
+        }
+        //畫表盤
+        clock.prototype.drawCCFace = function () 
+	{
+  		var cxt = this.context;
+  		//外框大圓
+  		cxt.lineWidth = this.B; //筆刷寬度
+  		cxt.beginPath();
+  		cxt.arc(0, 0, this.R - this.B, 0, 2 * Math.PI);
+  		cxt.stroke();
+  		cxt.closePath();
+  		//中心小圓
+  		cxt.lineWidth = 3;
+  		cxt.beginPath();
+  		cxt.arc(0, 0, 3, 0, 2 * Math.PI);
+  		cxt.stroke();
+  		cxt.closePath();
+  		//填充黑色
+  		cxt.fillStyle = "Black";
+  		cxt.fill();
+  		cxt.restore();
+  		cxt.save();
+	}
+        //畫時針刻度
+        clock.prototype.drawHHScale = function ()
+	{
+  		var cxt = this.context;
+  		cxt.lineWidth = 3;
+  		cxt.beginPath();
+  		for (var i = 1; i < 13; i++) 
+		{
+      			cxt.rotate(Math.PI / 6);
+      			cxt.moveTo(this.R - this.B - 15, 0);
+      			cxt.lineTo(this.R - this.B, 0);
+  		}
+  		cxt.stroke();
+  		cxt.closePath();
+  		cxt.restore();
+  		cxt.save();
+        }
+        //畫分針刻度
+        clock.prototype.drawMMScale = function () 
+	{
+  		var cxt = this.context;
+  		cxt.lineWidth = 1;
+  		cxt.beginPath();
+  		for (var i = 0; i < 60; i++) 
+		{
+      			if (i % 5 != 0) 
+			{
+          			cxt.moveTo(this.R-this.B-8, 0);
+          			cxt.lineTo(this.R-this.B, 0);
+      			}
+      			cxt.rotate(Math.PI / 30);
+  		}
+  		cxt.stroke();
+  		cxt.closePath();
+  		cxt.restore();
+  		cxt.save();
+        }
+        //畫數字
+        clock.prototype.drawCCNumber = function () 
+	{
+  		var cxt = this.context;
+  		cxt.rotate(Math.PI / 2);
+  		for (i = 0; i < 12; i++) 
+		{
+      			var num = (i + 3 > 12) ? i + 3 - 12 : i + 3;
+      			var numX = Math.round(Math.cos(i * Math.PI / 6) * (this.R - this.B - 30));
+      			var numY = Math.round(Math.sin(i * Math.PI / 6) * (this.R - this.B - 30));
+      			cxt.font = 'bold 12px';
+      			cxt.fillStyle = "Black";
+      			cxt.fillText(num, numX - 5, numY + 5);
+  		}
+  		cxt.restore();
+  		cxt.save();
+        }
+        //畫指針
+        clock.prototype.drawCCHand = function () 
+	{
+  		var tt = new Date();
+  		//時，分，秒
+  		var hh = tt.getHours() > 12 ? tt.getHours() - 12 : tt.getHours();
+		var mm = tt.getMinutes();
+  		var ss = tt.getSeconds();
+  		var cxt = this.context;
+  		//畫時針
+  		cxt.rotate((Math.PI / 6) * hh + (Math.PI / 360) * mm + (Math.PI / 21600) * ss);
+  		cxt.lineCap = "round";
+  		cxt.beginPath();
+  		cxt.moveTo(0, 0);
+  		cxt.lineTo(this.R / 2, 0);
+  		cxt.stroke();
+  		cxt.closePath();
+  		cxt.restore();
+  		cxt.save();
+  		//畫分針
+  		cxt.rotate((Math.PI / 30) * mm + (Math.PI / 1800) * ss);
+  		cxt.lineCap = "round";
+  		cxt.beginPath();
+  		cxt.moveTo(0, 0);
+  		cxt.lineTo(this.R - this.B - 20, 0);
+  		cxt.stroke();
+  		cxt.closePath();
+  		cxt.restore();
+  		cxt.save();
+  		//畫秒針
+  		cxt.rotate(ss * Math.PI / 30);
+  		cxt.lineWidth = 2;
+  		cxt.beginPath();
+  		cxt.moveTo(-20, 0);
+  		cxt.lineTo(this.R - this.B - 5, 0);
+  		cxt.stroke();
+  		cxt.closePath();
+  		cxt.restore();
+  		cxt.save();
+        }
+        //還原畫布到原始狀態
+        clock.prototype.cxtBackOriginal = function ()
+ 	{
+  		var cxt = this.context;
+  		cxt.restore();
+  		cxt.restore();
+        }
+        //主函數
+        function Main()
+ 	{
+  		var c = new clock("canvas");
+  		setInterval(
+		function () 
+		{
+      		//初始化
+      		c.cxtInit();
+      		//表盤
+      		c.drawCCFace();
+      		//刻度,數字
+      		c.drawHHScale();
+      		c.drawMMScale();
+      		c.drawCCNumber();
+      		//指針
+      		c.drawCCHand();
+      		//還原畫布到原始狀態
+      		c.cxtBackOriginal();
+  		}, 1000);
+        }
+        Main();
+	var Today=new Date();
+　	document.write("今天日期是 " + Today.getFullYear()+ " 年 " + (Today.getMonth()+1) + " 月 " + Today.getDate() + " 日");
+    	</script>
+</body>
+</html>
